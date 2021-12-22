@@ -221,7 +221,7 @@ function ajaxConvert(s: Partial<Options>, response: Response, likeXHR: XHR, isSu
 }
 
 function parseXML(data: string): XMLDocument {
-  var xml, parserErrorElem;
+  let xml, parserErrorElem;
   if (!data || typeof data !== "string") {
     return null;
   }
