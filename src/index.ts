@@ -44,7 +44,7 @@ function inspectPrefiltersOrTransports(
   structure: Record<string, Function[]>,
   options: Partial<Options>,
   originalOptions: Partial<Options>,
-  jqXHR: XHR
+  likeXHR: XHR
 ) {
   const inspected = {},
     seekingTransport = structure === transports;
@@ -56,7 +56,7 @@ function inspectPrefiltersOrTransports(
       const dataTypeOrTransport = prefilterOrFactory(
         options,
         originalOptions,
-        jqXHR
+        likeXHR
       );
       if (
         typeof dataTypeOrTransport === "string" &&
@@ -92,7 +92,7 @@ function ajaxExtend(target: Partial<Options>, src: Partial<Options>): Partial<Op
   return target;
 }
 
-function ajaxHandleResponses(s: Partial<Options>, jqXHR: XHR, responses: Response): any {
+function ajaxHandleResponses(s: Partial<Options>, likeXHR: XHR, responses: Response): any {
   let ct,
     type,
     finalDataType,
@@ -103,7 +103,7 @@ function ajaxHandleResponses(s: Partial<Options>, jqXHR: XHR, responses: Respons
   while (dataTypes[0] === "*") {
     dataTypes.shift();
     if (ct === undefined) {
-      ct = s.mimeType || jqXHR.getResponseHeader("Content-Type");
+      ct = s.mimeType || likeXHR.getResponseHeader("Content-Type");
     }
   }
 
@@ -140,7 +140,7 @@ function ajaxHandleResponses(s: Partial<Options>, jqXHR: XHR, responses: Respons
   }
 }
 
-function ajaxConvert(s: Partial<Options>, response: Response, jqXHR: XHR, isSuccess: boolean): {
+function ajaxConvert(s: Partial<Options>, response: Response, likeXHR: XHR, isSuccess: boolean): {
   state: string;
   data: any
 } {
@@ -162,7 +162,7 @@ function ajaxConvert(s: Partial<Options>, response: Response, jqXHR: XHR, isSucc
 
   while (current) {
     if (s.responseFields[current]) {
-      jqXHR[s.responseFields[current]] = response;
+      likeXHR[s.responseFields[current]] = response;
     }
 
     if (!prev && isSuccess && s.dataFilter) {
@@ -434,7 +434,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     rejectWith,
     strAbort = "canceled",
     completeDeferred = new Set(),
-    jqXHR = new (class extends Promise implements XHR {
+    likeXHR = new (class extends Promise implements XHR {
       readyState = 0;
       done = this.then;
       failure = this.catch;
@@ -486,7 +486,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
         let code;
         if (map) {
           if (completed) {
-            promise.always(map[jqXHR.status]);
+            promise.always(map[likeXHR.status]);
           } else {
             for (code in map) {
               statusCode[code] = [statusCode[code], map[code]];
@@ -549,10 +549,10 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     s.data = toParam(s.data, s.traditional);
   }
 
-  inspectPrefiltersOrTransports(prefilters, s, options, jqXHR);
+  inspectPrefiltersOrTransports(prefilters, s, options, likeXHR);
 
   if (completed) {
-    return jqXHR;
+    return likeXHR;
   }
 
   fireGlobals = event && s.global;
@@ -593,10 +593,10 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
 
   if (s.ifModified) {
     if (lastModified.has(cacheURL)) {
-      jqXHR.setRequestHeader("If-Modified-Since", lastModified.get(cacheURL)!);
+      likeXHR.setRequestHeader("If-Modified-Since", lastModified.get(cacheURL)!);
     }
     if (etag.has(cacheURL)) {
-      jqXHR.setRequestHeader("If-None-Match", etag.get(cacheURL));
+      likeXHR.setRequestHeader("If-None-Match", etag.get(cacheURL));
     }
   }
 
@@ -604,10 +604,10 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     (s.data && s.hasContent && s.contentType !== false) ||
     options.contentType
   ) {
-    jqXHR.setRequestHeader("Content-Type", s.contentType);
+    likeXHR.setRequestHeader("Content-Type", s.contentType);
   }
 
-  jqXHR.setRequestHeader(
+  likeXHR.setRequestHeader(
     "Accept",
     s.dataTypes[0] && s.accepts[s.dataTypes[0]]
       ? s.accepts[s.dataTypes[0]] +
@@ -616,40 +616,40 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
   );
 
   for (i in s.headers) {
-    jqXHR.setRequestHeader(i, s.headers[i]);
+    likeXHR.setRequestHeader(i, s.headers[i]);
   }
 
   if (
     s.beforeSend &&
-    (s.beforeSend.call(callbackContext, jqXHR, s) === false || completed)
+    (s.beforeSend.call(callbackContext, likeXHR, s) === false || completed)
   ) {
-    return jqXHR.abort();
+    return likeXHR.abort();
   }
 
   strAbort = "abort";
 
   completeDeferred.add(s.complete);
-  jqXHR.done(s.success);
-  jqXHR.fail(s.error);
+  likeXHR.done(s.success);
+  likeXHR.fail(s.error);
 
-  transport = inspectPrefiltersOrTransports(transports, s, options, jqXHR);
+  transport = inspectPrefiltersOrTransports(transports, s, options, likeXHR);
 
   if (!transport) {
     done(-1, "No Transport");
   } else {
-    jqXHR.readyState = 1;
+    likeXHR.readyState = 1;
 
     if (fireGlobals) {
-      globalEventContext.trigger("ajaxSend", [jqXHR, s]);
+      globalEventContext.trigger("ajaxSend", [likeXHR, s]);
     }
 
     if (completed) {
-      return jqXHR;
+      return likeXHR;
     }
 
     if (s.async && s.timeout > 0) {
       timeoutTimer = window.setTimeout(function () {
-        jqXHR.abort("timeout");
+        likeXHR.abort("timeout");
       }, s.timeout);
     }
 
@@ -687,12 +687,12 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
 
     responseHeadersString = headers || "";
 
-    jqXHR.readyState = status > 0 ? 4 : 0;
+    likeXHR.readyState = status > 0 ? 4 : 0;
 
     isSuccess = (status >= 200 && status < 300) || status === 304;
 
     if (responses) {
-      response = ajaxHandleResponses(s, jqXHR, responses);
+      response = ajaxHandleResponses(s, likeXHR, responses);
     }
 
     if (
@@ -703,15 +703,15 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
       s.converters["text script"] = function () {};
     }
 
-    response = ajaxConvert(s, response, jqXHR, isSuccess);
+    response = ajaxConvert(s, response, likeXHR, isSuccess);
 
     if (isSuccess) {
       if (s.ifModified) {
-        modified = jqXHR.getResponseHeader("Last-Modified");
+        modified = likeXHR.getResponseHeader("Last-Modified");
         if (modified) {
           lastModified.set(cacheURL, modified);
         }
-        modified = jqXHR.getResponseHeader("etag");
+        modified = likeXHR.getResponseHeader("etag");
         if (modified) {
           etag.set(cacheURL, modified);
         }
@@ -737,30 +737,30 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
       }
     }
 
-    jqXHR.status = status;
-    jqXHR.statusText = (nativeStatusText || statusText) + "";
+    likeXHR.status = status;
+    likeXHR.statusText = (nativeStatusText || statusText) + "";
 
     if (isSuccess) {
-      resolveWith(callbackContext, [success, statusText, jqXHR]);
+      resolveWith(callbackContext, [success, statusText, likeXHR]);
     } else {
-      rejectWith(callbackContext, [jqXHR, statusText, error]);
+      rejectWith(callbackContext, [likeXHR, statusText, error]);
     }
 
-    jqXHR.statusCode(statusCode);
+    likeXHR.statusCode(statusCode);
     statusCode = undefined;
 
     if (fireGlobals) {
       globalEventContext.trigger(isSuccess ? "ajaxSuccess" : "ajaxError", [
-        jqXHR,
+        likeXHR,
         s,
         isSuccess ? success : error,
       ]);
     }
 
-    completeDeferred.forEach((cb) => cb(callbackContext, [jqXHR, statusText]));
+    completeDeferred.forEach((cb) => cb(callbackContext, [likeXHR, statusText]));
 
     if (fireGlobals) {
-      globalEventContext.trigger("ajaxComplete", [jqXHR, s]);
+      globalEventContext.trigger("ajaxComplete", [likeXHR, s]);
 
       if (!--active) {
         event.trigger("ajaxStop");
@@ -768,7 +768,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     }
   }
 
-  return jqXHR;
+  return likeXHR;
 }
 
 function getJSON(url: string, data?: any, callback?: Required<Options>["success"]) {
@@ -1024,7 +1024,7 @@ ajaxSetup({
   },
 });
 
-ajaxPrefilter("json jsonp", (s, originalSettings, jqXHR) => {
+ajaxPrefilter("json jsonp", (s, originalSettings, likeXHR) => {
   let callbackName, overwritten, responseContainer;
   const jsonProp =
     s.jsonp !== false &&
@@ -1061,7 +1061,7 @@ ajaxPrefilter("json jsonp", (s, originalSettings, jqXHR) => {
       responseContainer = arguments;
     };
 
-    jqXHR.always(function () {
+    likeXHR.always(function () {
       if (overwritten === undefined) {
         kijs(window).removeProp(callbackName);
       } else {
@@ -1130,11 +1130,11 @@ function installer(Kijs: Kijs): void {
         })
         .always(
           callback &&
-            function (jqXHR, status) {
+            function (likeXHR, status) {
               self.each(function () {
                 callback.apply(
                   this,
-                  response || [jqXHR.responseText, status, jqXHR]
+                  response || [likeXHR.responseText, status, likeXHR]
                 );
               });
             }
