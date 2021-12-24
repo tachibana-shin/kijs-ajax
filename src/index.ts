@@ -483,12 +483,11 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
       }
 
       statusCode(map) {
-        let code;
         if (map) {
           if (completed) {
             promise.always(map[likeXHR.status]);
           } else {
-            for (code in map) {
+            for (const code in map) {
               statusCode[code] = [statusCode[code], map[code]];
             }
           }
@@ -497,7 +496,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
       }
 
       abort(statusText) {
-        let finalText = statusText || strAbort;
+        const finalText = statusText || strAbort;
         if (transport) {
           transport.abort(finalText);
         }
@@ -803,8 +802,7 @@ function createMethod(method: string) {
 }
 
 ajaxPrefilter((s: Partial<Options>): void => {
-  let i;
-  for (i in s.headers) {
+  for (const i in s.headers) {
     if (i.toLowerCase() === "content-type") {
       s.contentType = s.headers[i] || "";
     }
