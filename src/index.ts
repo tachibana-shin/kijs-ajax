@@ -1,3 +1,9 @@
+/* eslint-disable functional/prefer-readonly-type */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { each, extend, isFunction } from "kijs";
+
 const r20 = /%20/g,
   rhash = /#.*$/,
   rantiCache = /([?&])_=[^&]*/,
@@ -5,18 +11,49 @@ const r20 = /%20/g,
   rlocalProtocol = /^(?:about|app|app-storage|.+-extension|file|res|widget):$/,
   rnoContent = /^(?:GET|HEAD)$/,
   rprotocol = /^\/\//,
-  prefilters: Record<string, Function[]> = {},
-  transports: Record<string, Function[]> = {},
+  rnothtmlwhite = /[^\x20\t\r\n\f]+/g,
+  prefilters: Record<
+    string,
+    
+    ((
+      options: Partial<Options>,
+      originalOptions: Partial<Options>,
+      likeXHR: XHR
+    ) => string | boolean)[]
+  > = {},
+  transports: Record<
+    string,
+    
+    ((
+      options: Partial<Options>,
+      originalOptions: Partial<Options>,
+      likeXHR: XHR
+    ) => string | boolean)[]
+  > = {},
   allTypes = "*/".concat("*"),
   originAnchor = new URL("./", location.href);
 
 function throwerror(err: any) {
   setTimeout(() => {
+    // eslint-disable-next-line functional/no-throw-statement
     throw err;
   });
 }
-function addToPrefiltersOrTransports(structure: Record<string, Function[]>) {
-  return function (dataTypeExpression: Function | string, func?: Function) {
+function addToPrefiltersOrTransports(
+  structure: Record<
+    string,
+    
+    ((
+      options: Partial<Options>,
+      originalOptions: Partial<Options>,
+      likeXHR: XHR
+    ) => string | boolean)[]
+  >
+): {
+  (func: (data: any) => any): void;
+  (dataTypeExpression: string, func: (data: any) => any): void;
+} {
+  return function (dataTypeExpression: any, func?: any): void {
     if (typeof dataTypeExpression !== "string") {
       func = dataTypeExpression;
       dataTypeExpression = "*";
@@ -26,13 +63,17 @@ function addToPrefiltersOrTransports(structure: Record<string, Function[]>) {
       dataTypeExpression.toLowerCase().match(rnothtmlwhite) || [];
 
     if (isFunction(func)) {
+      // eslint-disable-next-line functional/no-let
       let dataType,
         i = 0;
+      // eslint-disable-next-line functional/no-loop-statement
       while ((dataType = dataTypes[i++])) {
         if (dataType[0] === "+") {
           dataType = dataType.slice(1) || "*";
+          // eslint-disable-next-line functional/immutable-data
           (structure[dataType] = structure[dataType] || []).unshift(func);
         } else {
+          // eslint-disable-next-line functional/immutable-data
           (structure[dataType] = structure[dataType] || []).push(func);
         }
       }
@@ -41,7 +82,15 @@ function addToPrefiltersOrTransports(structure: Record<string, Function[]>) {
 }
 
 function inspectPrefiltersOrTransports(
-  structure: Record<string, Function[]>,
+  structure: Record<
+    string,
+    
+    ((
+      options: Partial<Options>,
+      originalOptions: Partial<Options>,
+      likeXHR: XHR
+    ) => string | boolean)[]
+  >,
   options: Partial<Options>,
   originalOptions: Partial<Options>,
   likeXHR: XHR
@@ -49,9 +98,11 @@ function inspectPrefiltersOrTransports(
   const inspected = {},
     seekingTransport = structure === transports;
 
-  function inspect(dataType: string): void | string | Function {
+  function inspect(dataType: string): void | string | ((data: any) => any) {
+    // eslint-disable-next-line functional/no-let
     let selected;
-    inspected[dataType] = true;
+    // eslint-disable-next-line functional/immutable-data
+    (inspected as any)[dataType] = true;
     each(structure[dataType] || [], (prefilterOrFactory) => {
       const dataTypeOrTransport = prefilterOrFactory(
         options,
@@ -61,9 +112,10 @@ function inspectPrefiltersOrTransports(
       if (
         typeof dataTypeOrTransport === "string" &&
         !seekingTransport &&
-        !inspected[dataTypeOrTransport]
+        !(inspected as any)[dataTypeOrTransport]
       ) {
-        options.dataTypes.unshift(dataTypeOrTransport);
+        // eslint-disable-next-line functional/immutable-data
+        options.dataTypes!.unshift(dataTypeOrTransport);
         inspect(dataTypeOrTransport);
         return false;
       } else if (seekingTransport) {
@@ -73,16 +125,22 @@ function inspectPrefiltersOrTransports(
     return selected;
   }
 
-  return inspect(options.dataTypes[0]) || (!inspected["*"] && inspect("*"));
+  return inspect(options.dataTypes![0]) || (!(inspected as any)["*"] && inspect("*"));
 }
 
-function ajaxExtend(target: Partial<Options>, src: Partial<Options>): Partial<Options> {
+function ajaxExtend(
+  target: Partial<Options>,
+  src: Partial<Options>
+): Partial<Options> {
+  // eslint-disable-next-line functional/no-let
   let deep;
   const flatOptions = ajaxSettings.flatOptions || {};
 
+  // eslint-disable-next-line functional/no-loop-statement
   for (const key in src) {
-    if (src[key] !== undefined) {
-      (flatOptions[key] ? target : deep || (deep = {}))[key] = src[key];
+    if ((src as any)[key] !== undefined) {
+      // eslint-disable-next-line functional/immutable-data
+      ((flatOptions as any)[key] ? target : deep || (deep = {}) as any)[key] = (src as any)[key];
     }
   }
   if (deep) {
@@ -92,15 +150,22 @@ function ajaxExtend(target: Partial<Options>, src: Partial<Options>): Partial<Op
   return target;
 }
 
-function ajaxHandleResponses(s: Partial<Options>, likeXHR: XHR, responses: Response): any {
+function ajaxHandleResponses(
+  s: Partial<Options>,
+  likeXHR: XHR,
+  responses: Response
+): any {
+  // eslint-disable-next-line functional/no-let
   let ct,
-    type,
     finalDataType,
-    firstDataType,
+    firstDataType
+    const
     contents = s.contents,
     dataTypes = s.dataTypes;
 
-  while (dataTypes[0] === "*") {
+  // eslint-disable-next-line functional/no-loop-statement
+  while (dataTypes?.[0] === "*") {
+    // eslint-disable-next-line functional/immutable-data
     dataTypes.shift();
     if (ct === undefined) {
       ct = s.mimeType || likeXHR.getResponseHeader("Content-Type");
@@ -108,19 +173,22 @@ function ajaxHandleResponses(s: Partial<Options>, likeXHR: XHR, responses: Respo
   }
 
   if (ct) {
-    for (type in contents) {
+    // eslint-disable-next-line functional/no-loop-statement
+    for (const type in contents) {
       if (contents[type] && contents[type].test(ct)) {
-        dataTypes.unshift(type);
+        // eslint-disable-next-line functional/immutable-data
+        dataTypes!.unshift(type);
         break;
       }
     }
   }
 
-  if (dataTypes[0] in responses) {
-    finalDataType = dataTypes[0];
+  if (dataTypes![0] in responses) {
+    finalDataType = dataTypes![0];
   } else {
-    for (type in responses) {
-      if (!dataTypes[0] || s.converters[type + " " + dataTypes[0]]) {
+    // eslint-disable-next-line functional/no-loop-statement
+    for (const type in responses) {
+      if (!dataTypes![0] || s.converters![type + " " + dataTypes![0]]) {
         finalDataType = type;
         break;
       }
@@ -133,33 +201,45 @@ function ajaxHandleResponses(s: Partial<Options>, likeXHR: XHR, responses: Respo
   }
 
   if (finalDataType) {
-    if (finalDataType !== dataTypes[0]) {
-      dataTypes.unshift(finalDataType);
+    if (finalDataType !== dataTypes![0]) {
+      // eslint-disable-next-line functional/immutable-data
+      dataTypes!.unshift(finalDataType);
     }
-    return responses[finalDataType];
+    return (responses as any)[finalDataType];
   }
 }
 
-function ajaxConvert(s: Partial<Options>, response: Response, likeXHR: XHR, isSuccess: boolean): {
-  state: string;
-  data: any
+function ajaxConvert(
+  s: Partial<Options>,
+  response: Response,
+  likeXHR: XHR,
+  isSuccess: boolean
+): {
+  readonly state: string;
+  readonly data: any;
 } {
+  // eslint-disable-next-line functional/no-let
   let conv2,
     current,
     conv,
     tmp,
-    prev,
-    converters = {},
-    dataTypes = s.dataTypes.slice();
+    prev
+    const
+    converters = {} as any,
+    dataTypes = s.dataTypes!.slice();
 
   if (dataTypes[1]) {
+    // eslint-disable-next-line functional/no-loop-statement
     for (conv in s.converters) {
-      converters[conv.toLowerCase()] = s.converters[conv];
+      // eslint-disable-next-line functional/immutable-data
+      converters[conv.toLowerCase()] = s.converters![conv];
     }
   }
 
+  // eslint-disable-next-line functional/immutable-data
   current = dataTypes.shift();
 
+  // eslint-disable-next-line functional/no-loop-statement
   while (current) {
     if (s.responseFields[current]) {
       likeXHR[s.responseFields[current]] = response;
@@ -179,6 +259,7 @@ function ajaxConvert(s: Partial<Options>, response: Response, likeXHR: XHR, isSu
         conv = converters[prev + " " + current] || converters["* " + current];
 
         if (!conv) {
+          // eslint-disable-next-line functional/no-loop-statement
           for (conv2 in converters) {
             tmp = conv2.split(" ");
             if (tmp[1] === current) {
@@ -274,7 +355,13 @@ type Options<
     [key: string]: string;
   };
   async: boolean;
-  beforeSend: (this: Context, xhr: XHR, options: Partial<Options>) => void | false;
+  dataTypes: string[]
+  flatOptions: Record<string, boolean>;
+  beforeSend: (
+    this: Context,
+    xhr: XHR,
+    options: Partial<Options>
+  ) => void | false;
   cache: boolean;
   complete: (this: Context, xhr: XHR, textStatus: TextStatus) => void;
   contents: {
@@ -288,7 +375,12 @@ type Options<
   crossDomain: boolean;
   data: Data;
   dataFilter: (this: Context, data: Data, type: DataType) => any;
-  error: (this: Context, xhr, textStatus: TextStatus, errorText: string) => void;
+  error: (
+    this: Context,
+    xhr,
+    textStatus: TextStatus,
+    errorText: string
+  ) => void;
   global: boolean;
   headers: {
     [key: string]: string;
@@ -314,7 +406,7 @@ type Options<
   url: string;
   xhr: () => any;
   xhrFields: {
-    [key: string]: boolean | string;
+    readonly [key: string]: boolean | string;
   };
 };
 
@@ -592,7 +684,10 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
 
   if (s.ifModified) {
     if (lastModified.has(cacheURL)) {
-      likeXHR.setRequestHeader("If-Modified-Since", lastModified.get(cacheURL)!);
+      likeXHR.setRequestHeader(
+        "If-Modified-Since",
+        lastModified.get(cacheURL)!
+      );
     }
     if (etag.has(cacheURL)) {
       likeXHR.setRequestHeader("If-None-Match", etag.get(cacheURL));
@@ -756,7 +851,9 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
       ]);
     }
 
-    completeDeferred.forEach((cb) => cb(callbackContext, [likeXHR, statusText]));
+    completeDeferred.forEach((cb) =>
+      cb(callbackContext, [likeXHR, statusText])
+    );
 
     if (fireGlobals) {
       globalEventContext.trigger("ajaxComplete", [likeXHR, s]);
@@ -770,7 +867,11 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
   return likeXHR;
 }
 
-function getJSON(url: string, data?: any, callback?: Required<Options>["success"]) {
+function getJSON(
+  url: string,
+  data?: any,
+  callback?: Required<Options>["success"]
+) {
   return get(url, data, callback, "json");
 }
 
@@ -779,7 +880,12 @@ function getScript(url: string, callback?: Required<Options>["success"]) {
 }
 
 function createMethod(method: string) {
-  return function (url: string, data?: any, callback?: Required<Options>["success"], type: Required<Options>["type"] = "GET"): XHR {
+  return function (
+    url: string,
+    data?: any,
+    callback?: Required<Options>["success"],
+    type: Required<Options>["type"] = "GET"
+  ): XHR {
     if (isFunction(data)) {
       type = type || callback;
       callback = data;
@@ -809,7 +915,11 @@ ajaxPrefilter((s: Partial<Options>): void => {
   }
 });
 
-function evalUrl(url: string, options?: Partial<Options>, doc: Document = document) {
+function evalUrl(
+  url: string,
+  options?: Partial<Options>,
+  doc: Document = document
+) {
   return ajax({
     url: url,
 
@@ -1090,7 +1200,11 @@ isSpport.createHTMLDocument = (() => {
 })();
 
 function installer(Kijs: Kijs): void {
-  Kijs.prototype.load = function (url: string, params?: any, callback?: Required<Options>["success"]) {
+  Kijs.prototype.load = function (
+    url: string,
+    params?: any,
+    callback?: Required<Options>["success"]
+  ) {
     let selector,
       type,
       response,
