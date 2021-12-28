@@ -1,4 +1,6 @@
-export default function addToPrefiltersOrTransports(structure: Record<string, Function[]>) {
+export default function addToPrefiltersOrTransports(
+  structure: Record<string, Function[]>
+) {
   return function (dataTypeExpression: Function | string, func?: Function) {
     if (typeof dataTypeExpression !== "string") {
       func = dataTypeExpression;

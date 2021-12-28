@@ -1,6 +1,9 @@
-export default 
-function installer(Kijs: Kijs): void {
-  Kijs.prototype.load = function (url: string, params?: any, callback?: Required<Options>["success"]) {
+export default function installer(Kijs: Kijs): void {
+  Kijs.prototype.load = function (
+    url: string,
+    params?: any,
+    callback?: Required<Options>["success"]
+  ) {
     let selector,
       type,
       response,

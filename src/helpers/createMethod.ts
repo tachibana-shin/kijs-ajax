@@ -1,6 +1,10 @@
-export default 
-function createMethod(method: string) {
-  return function (url: string, data?: any, callback?: Required<Options>["success"], type: Required<Options>["type"] = "GET"): XHR {
+export default function createMethod(method: string) {
+  return function (
+    url: string,
+    data?: any,
+    callback?: Required<Options>["success"],
+    type: Required<Options>["type"] = "GET"
+  ): XHR {
     if (isFunction(data)) {
       type = type || callback;
       callback = data;

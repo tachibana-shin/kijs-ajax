@@ -1,4 +1,3 @@
-
 const ajaxSettings: Options = {
   url: location.href,
   type: "GET",
@@ -49,3 +48,5 @@ const ajaxSettings: Options = {
     } catch {}
   },
 };
+
+export default ajaxSettings;

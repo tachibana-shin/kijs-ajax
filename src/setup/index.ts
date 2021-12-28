@@ -1,4 +1,3 @@
-
 ajaxPrefilter((s: Partial<Options>): void => {
   for (const i in s.headers) {
     if (i.toLowerCase() === "content-type") {
@@ -6,7 +5,6 @@ ajaxPrefilter((s: Partial<Options>): void => {
     }
   }
 });
-
 
 const xhrSuccessStatus = {
     0: 200,

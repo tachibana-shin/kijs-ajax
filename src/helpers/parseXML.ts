@@ -1,5 +1,4 @@
-export default 
-function parseXML(data: string): XMLDocument {
+export default function parseXML(data: string): XMLDocument {
   let xml, parserErrorElem;
   if (!data || typeof data !== "string") {
     return null;

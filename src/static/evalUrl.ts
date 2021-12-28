@@ -1,4 +1,8 @@
-export default function evalUrl(url: string, options?: Partial<Options>, doc: Document = document) {
+export default function evalUrl(
+  url: string,
+  options?: Partial<Options>,
+  doc: Document = document
+) {
   return ajax({
     url: url,
 

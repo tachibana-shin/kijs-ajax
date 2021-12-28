@@ -24,7 +24,11 @@ type Options<
     [key: string]: string;
   };
   async: boolean;
-  beforeSend: (this: Context, xhr: XHR, options: Partial<Options>) => void | false;
+  beforeSend: (
+    this: Context,
+    xhr: XHR,
+    options: Partial<Options>
+  ) => void | false;
   cache: boolean;
   complete: (this: Context, xhr: XHR, textStatus: TextStatus) => void;
   contents: {
@@ -38,7 +42,12 @@ type Options<
   crossDomain: boolean;
   data: Data;
   dataFilter: (this: Context, data: Data, type: DataType) => any;
-  error: (this: Context, xhr, textStatus: TextStatus, errorText: string) => void;
+  error: (
+    this: Context,
+    xhr,
+    textStatus: TextStatus,
+    errorText: string
+  ) => void;
   global: boolean;
   headers: {
     [key: string]: string;

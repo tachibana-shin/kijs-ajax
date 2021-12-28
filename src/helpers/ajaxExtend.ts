@@ -1,4 +1,7 @@
-export default function ajaxExtend(target: Partial<Options>, src: Partial<Options>): Partial<Options> {
+export default function ajaxExtend(
+  target: Partial<Options>,
+  src: Partial<Options>
+): Partial<Options> {
   let deep;
   const flatOptions = ajaxSettings.flatOptions || {};
 

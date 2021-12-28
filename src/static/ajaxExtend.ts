@@ -1,4 +1,3 @@
-
 function ajaxSetup(target: string, settings: Exclude<Options, "url">): void;
 
 function ajaxSetup(settings: Options): void;

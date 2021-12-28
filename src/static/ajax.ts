@@ -1,5 +1,19 @@
+const r20 = /%20/g,
+  rhash = /#.*$/,
+  rantiCache = /([?&])_=[^&]*/,
+  rheaders = /^(.*?):[ \t]*([^\r\n]*)$/gm,
+  rlocalProtocol = /^(?:about|app|app-storage|.+-extension|file|res|widget):$/,
+  rnoContent = /^(?:GET|HEAD)$/,
+  rprotocol = /^\/\//,
+  originAnchor = new URL("./", location.href);
 
-function ajaxHandleResponses(s: Partial<Options>, likeXHR: XHR, responses: Response): any {
+let active = 0;
+
+function ajaxHandleResponses(
+  s: Partial<Options>,
+  likeXHR: XHR,
+  responses: Response
+): any {
   let ct,
     type,
     finalDataType,
@@ -47,9 +61,14 @@ function ajaxHandleResponses(s: Partial<Options>, likeXHR: XHR, responses: Respo
   }
 }
 
-function ajaxConvert(s: Partial<Options>, response: Response, likeXHR: XHR, isSuccess: boolean): {
+function ajaxConvert(
+  s: Partial<Options>,
+  response: Response,
+  likeXHR: XHR,
+  isSuccess: boolean
+): {
   state: string;
-  data: any
+  data: any;
 } {
   let conv2,
     current,
@@ -126,7 +145,6 @@ function ajaxConvert(s: Partial<Options>, response: Response, likeXHR: XHR, isSu
 
   return { state: "success", data: response };
 }
-
 
 function ajax(url: string, options: Exclude<Partial<Options>, "url">): XHR;
 function ajax(options: Partial<Options>): XHR;
@@ -320,7 +338,10 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
 
   if (s.ifModified) {
     if (lastModified.has(cacheURL)) {
-      likeXHR.setRequestHeader("If-Modified-Since", lastModified.get(cacheURL)!);
+      likeXHR.setRequestHeader(
+        "If-Modified-Since",
+        lastModified.get(cacheURL)!
+      );
     }
     if (etag.has(cacheURL)) {
       likeXHR.setRequestHeader("If-None-Match", etag.get(cacheURL));
@@ -484,7 +505,9 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
       ]);
     }
 
-    completeDeferred.forEach((cb) => cb(callbackContext, [likeXHR, statusText]));
+    completeDeferred.forEach((cb) =>
+      cb(callbackContext, [likeXHR, statusText])
+    );
 
     if (fireGlobals) {
       globalEventContext.trigger("ajaxComplete", [likeXHR, s]);
