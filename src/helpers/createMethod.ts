@@ -1,3 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { extend, isFunction, isObject } from "kijs";
+
+import Options from "../declares/Options";
+import XHR from "../declares/XHR";
+import ajax from "../static/ajax";
+
 export default function createMethod(method: string) {
   return function (
     url: string,
@@ -19,8 +26,8 @@ export default function createMethod(method: string) {
           dataType: type,
           data: data,
           success: callback,
-        },
-        isObject(url) && url
+        } as any,
+        isObject(url) ? (url as any) : undefined
       )
     );
   };

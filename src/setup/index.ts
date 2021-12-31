@@ -1,3 +1,13 @@
+/* eslint-disable functional/immutable-data */
+/* eslint-disable functional/no-loop-statement */
+import kijs, { globalEval, isFunction, support } from "kijs";
+
+import Options from "../declares/Options";
+import ajaxPrefilter from "../static/ajaxPrefilter";
+import ajaxSettings from "../static/ajaxSettings";
+import ajaxTransport from "../static/ajaxTransport";
+import throwerror from "../utils/throwerror";
+
 ajaxPrefilter((s: Partial<Options>): void => {
   for (const i in s.headers) {
     if (i.toLowerCase() === "content-type") {
@@ -13,17 +23,20 @@ const xhrSuccessStatus = {
   },
   xhrSupported = ajaxSettings.xhr();
 
-isSupport.cors = !!xhrSupported && "withCredentials" in xhrSupported;
-isSupport.ajax = xhrSupported = !!xhrSupported;
+support.cors = !!xhrSupported && "withCredentials" in xhrSupported;
+support.ajax = xhrSupported;
 
 ajaxTransport((options) => {
-  let callback, errorCallback;
+  // eslint-disable-next-line functional/no-let
+  let callback: { (arg0: string | undefined): void; (type: any): () => void; (): void; } | null, errorCallback: { (): void; (): void; } | null;
 
   if (support.cors || (xhrSupported && !options.crossDomain)) {
     return {
-      send(headers, complete) {
-        let i,
-          xhr = options.xhr();
+      send(headers: any, complete: any) {
+        // eslint-disable-next-line functional/no-let
+        let i
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const xhr = options.xhr!();
 
         xhr.open(
           options.type,

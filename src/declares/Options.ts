@@ -1,5 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable functional/prefer-readonly-type */
+
+import XHR from "./XHR";
+
 type Options<
-  Data = string | Record | Array<any> | FormData,
+  Data = string | Record<any, any> | Array<any> | FormData,
   DataType =
     | "xml"
     | "html"
@@ -44,7 +49,7 @@ type Options<
   dataFilter: (this: Context, data: Data, type: DataType) => any;
   error: (
     this: Context,
-    xhr,
+    xhr: XHR,
     textStatus: TextStatus,
     errorText: string
   ) => void;
@@ -55,6 +60,7 @@ type Options<
   ifModified: boolean;
   isLocal: boolean;
   jsonp: string | boolean;
+  // eslint-disable-next-line @typescript-eslint/ban-types
   jsonpCallback: string | Function;
   method: "GET" | "POST" | "PUT" | "DELETE";
   mimeType: string;
@@ -75,6 +81,8 @@ type Options<
   xhrFields: {
     [key: string]: boolean | string;
   };
+  dataTypes: string[];
+  username: string;
 };
 
 export default Options;

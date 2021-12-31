@@ -1,14 +1,24 @@
+import { each } from "kijs";
+
+import prefilters from "../constants/prefilters";
+import transports from "../constants/transports";
+import Options from "../declares/Options";
+import XHR from "../declares/XHR";
+
 export default function inspectPrefiltersOrTransports(
-  structure: Record<string, Function[]>,
+  structure: typeof transports | typeof prefilters,
   options: Partial<Options>,
   originalOptions: Partial<Options>,
   likeXHR: XHR
 ) {
-  const inspected = {},
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const inspected = {} as any,
     seekingTransport = structure === transports;
 
-  function inspect(dataType: string): void | string | Function {
+  function inspect(dataType: string): void | string {
+    // eslint-disable-next-line functional/no-let
     let selected;
+    // eslint-disable-next-line functional/immutable-data
     inspected[dataType] = true;
     each(structure[dataType] || [], (prefilterOrFactory) => {
       const dataTypeOrTransport = prefilterOrFactory(
@@ -21,7 +31,8 @@ export default function inspectPrefiltersOrTransports(
         !seekingTransport &&
         !inspected[dataTypeOrTransport]
       ) {
-        options.dataTypes.unshift(dataTypeOrTransport);
+        // eslint-disable-next-line functional/immutable-data, @typescript-eslint/no-non-null-assertion
+        options.dataTypes!.unshift(dataTypeOrTransport);
         inspect(dataTypeOrTransport);
         return false;
       } else if (seekingTransport) {
@@ -31,5 +42,6 @@ export default function inspectPrefiltersOrTransports(
     return selected;
   }
 
-  return inspect(options.dataTypes[0]) || (!inspected["*"] && inspect("*"));
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return inspect(options.dataTypes![0]) || (!inspected["*"] && inspect("*"));
 }

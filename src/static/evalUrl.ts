@@ -1,3 +1,6 @@
+import Options from "../declares/Options";
+import ajax from "./ajax";
+
 export default function evalUrl(
   url: string,
   options?: Partial<Options>,

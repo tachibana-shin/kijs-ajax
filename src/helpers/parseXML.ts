@@ -1,18 +1,21 @@
-export default function parseXML(data: string): XMLDocument {
-  let xml, parserErrorElem;
+import { map } from "kijs";
+
+export default function parseXML(data: string): Document | null {
   if (!data || typeof data !== "string") {
     return null;
   }
 
-  // Support: IE 9 - 11 only
-  // IE throws on parseFromString with invalid input.
+  // eslint-disable-next-line functional/no-let
+  let xml;
   try {
     xml = new window.DOMParser().parseFromString(data, "text/xml");
-  } catch (e) {}
+    // eslint-disable-next-line no-empty
+  } catch {}
 
-  parserErrorElem = xml && xml.getElementsByTagName("parsererror")[0];
+  const parserErrorElem = xml && xml.getElementsByTagName("parsererror")[0];
   if (!xml || parserErrorElem) {
-    throwerror(
+    // eslint-disable-next-line functional/no-throw-statement
+    throw new Error(
       "Invalid XML: " +
         (parserErrorElem
           ? map(parserErrorElem.childNodes, (el) => el.textContent).join("\n")
