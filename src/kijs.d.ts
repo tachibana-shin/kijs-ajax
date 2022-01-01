@@ -1,4 +1,4 @@
-import { support } from "kijs";
+import { support, Kijs } from "kijs";
 
 declare module "kijs" {
   interface support {
