@@ -8,6 +8,19 @@ import ajaxSettings from "../static/ajaxSettings";
 import ajaxTransport from "../static/ajaxTransport";
 import throwerror from "../utils/throwerror";
 
+import "./isSupport";
+
+const xhrSuccessStatus = {
+  0: 200,
+  1223: 204,
+};
+const xhrSupported = !!ajaxSettings.xhr();
+
+const oldCallbacks = [],
+  rjsonp = /(=)\?(?=&|$)|\?\?/;
+
+const expando = (Math.random() * Number.MAX_SAFE_INTEGER).toString(34);
+
 ajaxPrefilter((s: Partial<Options>): void => {
   for (const i in s.headers) {
     if (i.toLowerCase() === "content-type") {
@@ -16,25 +29,20 @@ ajaxPrefilter((s: Partial<Options>): void => {
   }
 });
 
-const xhrSuccessStatus = {
-    0: 200,
-
-    1223: 204,
-  },
-  xhrSupported = ajaxSettings.xhr();
-
-support.cors = !!xhrSupported && "withCredentials" in xhrSupported;
-support.ajax = xhrSupported;
-
 ajaxTransport((options) => {
   // eslint-disable-next-line functional/no-let
-  let callback: { (arg0: string | undefined): void; (type: any): () => void; (): void; } | null, errorCallback: { (): void; (): void; } | null;
+  let callback: {
+      (arg0: string | undefined): void;
+      (type: any): () => void;
+      (): void;
+    } | null,
+    errorCallback: { (): void; (): void } | null;
 
   if (support.cors || (xhrSupported && !options.crossDomain)) {
     return {
       send(headers: any, complete: any) {
         // eslint-disable-next-line functional/no-let
-        let i
+        let i;
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const xhr = options.xhr!();
 
@@ -199,11 +207,6 @@ ajaxTransport("script", (s) => {
   }
 });
 
-const oldCallbacks = [],
-  rjsonp = /(=)\?(?=&|$)|\?\?/;
-
-const expando = (Math.random() * Number.MAX_SAFE_INTEGER).toString(34);
-
 ajaxSetup({
   jsonp: "callback",
   jsonpCallback() {
@@ -273,9 +276,3 @@ ajaxPrefilter("json jsonp", (s, originalSettings, likeXHR) => {
     return "script";
   }
 });
-
-isSpport.createHTMLDocument = (() => {
-  const body = document.implementation.createHTMLDocument("").body;
-  body.innerHTML = "<form></form><form></form>";
-  return body.childNodes.length === 2;
-})();
