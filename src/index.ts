@@ -1,3 +1,5 @@
+import "./setup";
+
 export default installer;
 export {
   active,
