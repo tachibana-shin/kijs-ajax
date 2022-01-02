@@ -18,6 +18,8 @@ type XHR = Promise<any> & {
 
   // eslint-disable-next-line @typescript-eslint/ban-types
   always: (cb: Function) => XHR;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 };
 
 export default XHR;

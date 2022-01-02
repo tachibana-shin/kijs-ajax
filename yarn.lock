@@ -3209,10 +3209,10 @@ jsonfile@^6.0.1:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
-kijs@^0.0.2-b13:
-  version "0.0.2-b13"
-  resolved "https://registry.yarnpkg.com/kijs/-/kijs-0.0.2-b13.tgz#93d1b2bc8b4033ec64f896434f5c714173c0ea8c"
-  integrity sha512-bFA3jF0kiJRd0Jsr5pDO7w04+3385S/W6/tyWQFeD5M5GfEt8hjV7ZXMjaPWkQ7Zxpn8eBgTF/b6Xv9HUoCiew==
+kijs@^0.0.2-b15:
+  version "0.0.2-b15"
+  resolved "https://registry.yarnpkg.com/kijs/-/kijs-0.0.2-b15.tgz#86eced918da3a3b0671e28f861e1624492f7b4cc"
+  integrity sha512-fxExsmSpF27mxxjrv5EUQWHy4yr+DYP1kvs9b0cFDYYPIur6CMIghb4aOz7gwwXP/Zd38aKL6FKHdyHwq+3/wQ==
 
 kleur@^3.0.3:
   version "3.0.3"

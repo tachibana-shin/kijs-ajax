@@ -37,16 +37,16 @@ type Options<
   cache: boolean;
   complete: (this: Context, xhr: XHR, textStatus: TextStatus) => void;
   contents: {
-    [key: string]: RegExp;
+    [key: string]: RegExp | boolean;
   };
   contentType: boolean | string;
   context: Context;
   converters: {
-    [key: string]: (this: Context, text: string) => any;
+    [key: string]: ((text: string) => any) | boolean;
   };
   crossDomain: boolean;
   data: Data;
-  dataFilter: (this: Context, data: Data, type: DataType) => any;
+  dataFilter: (data: Data, type: DataType) => any;
   error: (
     this: Context,
     xhr: XHR,
@@ -82,7 +82,10 @@ type Options<
     [key: string]: boolean | string;
   };
   dataTypes: string[];
+  dataType: DataType;
   username: string;
+  responseFields: Record<string, any>;
+  throws: any;
 };
 
 export default Options;

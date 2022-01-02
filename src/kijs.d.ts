@@ -1,13 +1,17 @@
-import { Kijs, support } from "kijs";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Kijs, Support } from "kijs";
 
 declare module "kijs" {
-  const support: {
-    readonly cors: boolean;
-    readonly ajax: boolean;
-    readonly createHTMLDocument: boolean;
-  };
-
-  export { support }
+  type Old = Support;
+  // eslint-disable-next-line functional/prefer-type-literal
+  interface Support extends Old {
+    // eslint-disable-next-line functional/prefer-readonly-type
+    cors: boolean;
+    // eslint-disable-next-line functional/prefer-readonly-type
+    ajax: boolean;
+    // eslint-disable-next-line functional/prefer-readonly-type
+    createHTMLDocument: boolean;
+  }
 }
 
 declare module "kijs" {

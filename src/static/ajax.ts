@@ -1,27 +1,34 @@
+import Options from "../declares/Options";
+import XHR from "../declares/XHR";
+
 const r20 = /%20/g,
   rhash = /#.*$/,
   rantiCache = /([?&])_=[^&]*/,
-  rheaders = /^(.*?):[ \t]*([^\r\n]*)$/gm,
+  reader = /^(.*?):[ \t]*([^\r\n]*)$/gm,
   rlocalProtocol = /^(?:about|app|app-storage|.+-extension|file|res|widget):$/,
   rnoContent = /^(?:GET|HEAD)$/,
   rprotocol = /^\/\//,
   originAnchor = new URL("./", location.href);
 
+// eslint-disable-next-line functional/no-let
 let active = 0;
 
 function ajaxHandleResponses(
   s: Partial<Options>,
   likeXHR: XHR,
-  responses: Response
+  responses: Record<string, any>
 ): any {
+  // eslint-disable-next-line functional/no-let
   let ct,
-    type,
     finalDataType,
-    firstDataType,
-    contents = s.contents,
-    dataTypes = s.dataTypes;
+    firstDataType
+    const
+    contents = s.contents!,
+    dataTypes = s.dataTypes!;
 
-  while (dataTypes[0] === "*") {
+  // eslint-disable-next-line functional/no-loop-statement
+  while (dataTypes && dataTypes[0] === "*") {
+    // eslint-disable-next-line functional/immutable-data
     dataTypes.shift();
     if (ct === undefined) {
       ct = s.mimeType || likeXHR.getResponseHeader("Content-Type");
@@ -29,8 +36,10 @@ function ajaxHandleResponses(
   }
 
   if (ct) {
-    for (type in contents) {
-      if (contents[type] && contents[type].test(ct)) {
+    // eslint-disable-next-line functional/no-loop-statement
+    for (const type in contents) {
+      if (contents[type] && typeof contents[type] !== "boolean" && (contents[type] as RegExp).test(ct)) {
+        // eslint-disable-next-line functional/immutable-data
         dataTypes.unshift(type);
         break;
       }
@@ -40,8 +49,9 @@ function ajaxHandleResponses(
   if (dataTypes[0] in responses) {
     finalDataType = dataTypes[0];
   } else {
-    for (type in responses) {
-      if (!dataTypes[0] || s.converters[type + " " + dataTypes[0]]) {
+    // eslint-disable-next-line functional/no-loop-statement
+    for (const type in responses) {
+      if (!dataTypes[0] || s.converters?.[type + " " + dataTypes[0]]) {
         finalDataType = type;
         break;
       }
@@ -55,6 +65,7 @@ function ajaxHandleResponses(
 
   if (finalDataType) {
     if (finalDataType !== dataTypes[0]) {
+      // eslint-disable-next-line functional/immutable-data
       dataTypes.unshift(finalDataType);
     }
     return responses[finalDataType];
@@ -63,58 +74,73 @@ function ajaxHandleResponses(
 
 function ajaxConvert(
   s: Partial<Options>,
-  response: Response,
+  response: string,
   likeXHR: XHR,
   isSuccess: boolean
 ): {
-  state: string;
-  data: any;
-} {
-  let conv2,
+  readonly state: string;
+  readonly data: any;
+} | {
+  readonly state: string;
+  readonly error: any;
+}{
+  // eslint-disable-next-line functional/no-let
+  let conn2,
     current,
-    conv,
+    conc,
     tmp,
-    prev,
-    converters = {},
-    dataTypes = s.dataTypes.slice();
+    prev
+    const
+    converters:  Required<typeof s>["converters"] = {},
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    dataTypes = s.dataTypes!.slice();
 
   if (dataTypes[1]) {
-    for (conv in s.converters) {
-      converters[conv.toLowerCase()] = s.converters[conv];
+    // eslint-disable-next-line functional/no-loop-statement
+    for (const conc in s.converters) {
+      // eslint-disable-next-line functional/immutable-data
+      converters[conc.toLowerCase()] = s.converters[conc];
     }
   }
 
+  // eslint-disable-next-line functional/immutable-data
   current = dataTypes.shift();
 
+  // eslint-disable-next-line functional/no-loop-statement
   while (current) {
-    if (s.responseFields[current]) {
+    if (s.responseFields?.[current]) {
+      // eslint-disable-next-line functional/immutable-data
       likeXHR[s.responseFields[current]] = response;
     }
 
     if (!prev && isSuccess && s.dataFilter) {
-      response = s.dataFilter(response, s.dataType);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      response = s.dataFilter(response, s.dataType!);
     }
 
     prev = current;
+    // eslint-disable-next-line functional/immutable-data
     current = dataTypes.shift();
 
     if (current) {
       if (current === "*") {
         current = prev;
       } else if (prev !== "*" && prev !== current) {
-        conv = converters[prev + " " + current] || converters["* " + current];
+        conc = converters[prev + " " + current] || converters["* " + current];
 
-        if (!conv) {
-          for (conv2 in converters) {
-            tmp = conv2.split(" ");
+        if (!conc) {
+          // eslint-disable-next-line functional/no-loop-statement
+          for (conn2 in converters) {
+            tmp = conn2.split(" ");
             if (tmp[1] === current) {
-              conv =
+              conc =
                 converters[prev + " " + tmp[0]] || converters["* " + tmp[0]];
-              if (conv) {
-                if (conv === true) {
-                  conv = converters[conv2];
-                } else if (converters[conv2] !== true) {
+              if (conc) {
+                if (conc === true) {
+                  conc = converters[conn2];
+                } else if (converters[conn2] !== true) {
                   current = tmp[0];
+                  // eslint-disable-next-line functional/immutable-data
                   dataTypes.unshift(tmp[1]);
                 }
                 break;
@@ -123,16 +149,20 @@ function ajaxConvert(
           }
         }
 
-        if (conv !== true) {
-          if (conv && s.throws) {
-            response = conv(response);
+        if (conc !== true) {
+          if (conc && s.throws) {
+            response = conc(response);
           } else {
             try {
-              response = conv(response);
+              if (!conc) {
+                // eslint-disable-next-line functional/no-throw-statement
+                throw new Error("")
+              }
+              response = conc(response);
             } catch (e) {
               return {
                 state: "parsererror",
-                error: conv
+                error: conc
                   ? e
                   : "No conversion from " + prev + " to " + current,
               };
@@ -157,14 +187,15 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
 
   options = options || {};
 
-  let transport,
-    cacheURL,
-    responseHeadersString,
-    responseHeaders,
-    timeoutTimer,
+  // eslint-disable-next-line functional/no-let
+  let transport:any,
+    cacheURL: string,
+    responseHeadersString: string,
+    responseHeaders: { readonly [x: string]: any; },
+    timeoutTimer: number | undefined,
     urlAnchor,
-    completed,
-    fireGlobals,
+    completed: boolean | null,
+    fireGlobals: any,
     i,
     uncached,
     s = ajaxSetup({}, options),
@@ -176,28 +207,30 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     statusCode = s.statusCode || {},
     requestHeaders = {},
     requestHeadersNames = {},
-    resolveWith,
-    rejectWith,
+    resolveWith: (arg0: any, arg1: readonly any[]) => void,
+    rejectWith: (arg0: any, arg1: readonly any[]) => void,
     strAbort = "canceled",
     completeDeferred = new Set(),
     likeXHR = new (class extends Promise implements XHR {
-      readyState = 0;
-      done = this.then;
-      failure = this.catch;
+      readonly readyState = 0;
+      readonly done = this.then;
+      readonly failure = this.catch;
 
       constructor() {
-        super((resolve, reject) => {
+        super((resolve: any, reject: any) => {
           resolveWith = resolve;
           rejectWith = reject;
         });
       }
 
-      getResponseHeader(key) {
+      getResponseHeader(key: string) {
+        // eslint-disable-next-line functional/no-let
         let match;
         if (completed) {
           if (!responseHeaders) {
             responseHeaders = {};
-            while ((match = rheaders.exec(responseHeadersString))) {
+            // eslint-disable-next-line functional/no-loop-statement
+            while ((match = reader.exec(responseHeadersString))) {
               responseHeaders[match[1].toLowerCase() + " "] = (
                 responseHeaders[match[1].toLowerCase() + " "] || []
               ).concat(match[2]);
@@ -212,7 +245,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
         return completed ? responseHeadersString : null;
       }
 
-      setRequestHeader(name, value) {
+      setRequestHeader(name: string, value: any) {
         if (completed == null) {
           name = requestHeadersNames[name.toLowerCase()] =
             requestHeadersNames[name.toLowerCase()] || name;
@@ -221,14 +254,14 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
         return this;
       }
 
-      overrideMimeType(type) {
+      overrideMimeType(type: any) {
         if (completed == null) {
           s.mimeType = type;
         }
         return this;
       }
 
-      statusCode(map) {
+      statusCode(map: { readonly [x: string]: any; }) {
         if (map) {
           if (completed) {
             promise.always(map[likeXHR.status]);
@@ -241,7 +274,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
         return this;
       }
 
-      abort(statusText) {
+      abort(statusText: string | undefined) {
         const finalText = statusText || strAbort;
         if (transport) {
           transport.abort(finalText);
@@ -250,13 +283,14 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
         return this;
       }
 
-      always(cb) {
+      always(cb: (arg0: any) => void) {
+        // eslint-disable-next-line functional/no-let
         let isError = false;
 
-        this.catch((err) => {
+        this.catch((err: any) => {
           isError = true;
           return err;
-        }).then((e) => {
+        }).then((e: any) => {
           cb(e);
 
           if (isError) {
@@ -413,7 +447,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     }
   }
 
-  function done(status, nativeStatusText, responses, headers) {
+  function done(status: number, nativeStatusText: unknown, responses: Record<string, any> | undefined, headers: string | undefined) {
     let isSuccess,
       success,
       error,

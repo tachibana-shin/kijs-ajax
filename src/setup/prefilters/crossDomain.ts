@@ -1,5 +1,10 @@
+import ajaxPrefilter from "../../static/ajaxPrefilter";
+
 ajaxPrefilter((s) => {
   if (s.crossDomain) {
-    s.contents.script = false;
+    if (s.contents) {
+      // eslint-disable-next-line functional/immutable-data
+      s.contents.script = false;
+    }
   }
 });

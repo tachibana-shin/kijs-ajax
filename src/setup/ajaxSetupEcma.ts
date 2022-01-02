@@ -1,3 +1,7 @@
+import { globalEval } from "kijs";
+
+import ajaxSetup from "../static/ajaxExtend";
+
 ajaxSetup({
   accepts: {
     script:
@@ -8,7 +12,7 @@ ajaxSetup({
     script: /\b(?:java|ecma)script\b/,
   },
   converters: {
-    "text script"(text) {
+    "text script"(text: string) {
       globalEval(text);
       return text;
     },
