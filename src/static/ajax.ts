@@ -213,7 +213,6 @@ function ajax<Context = XHR>(
     // eslint-disable-next-line functional/prefer-readonly-type
     responseHeaders: { [x: string]: any },
     timeoutTimer: number | undefined,
-    urlAnchor,
     completed = false,
     uncached;
   const s = ajaxSetup({}, options),
@@ -379,7 +378,7 @@ function ajax<Context = XHR>(
   s.dataTypes = (s.dataType || "*").toLowerCase().match(rnothtmlwhite) || [""];
 
   if (s.crossDomain == null) {
-    urlAnchor = document.createElement("a");
+    const urlAnchor = document.createElement("a");
 
     try {
       // eslint-disable-next-line functional/immutable-data
@@ -404,7 +403,7 @@ function ajax<Context = XHR>(
     s.data instanceof FormData === false
   ) {
     // eslint-disable-next-line functional/immutable-data
-    s.data = toParam(s.data as Record<any, any>);
+    s.data = toParam(s.data as Record<any, any>, s.traditional);
   }
 
   inspectPrefiltersOrTransports(prefilters, s, options, likeXHR);
