@@ -322,7 +322,7 @@ function ajax<Context = XHR>(
       }
 
       done(cb: Options["success"]) {
-        return (this as unknown as XHR).then((data) => {
+        return (this as unknown as XHR).then(([data]) => {
           //success, statusText, likeXHR
           return (
             cb.call(
@@ -335,7 +335,7 @@ function ajax<Context = XHR>(
         }) as unknown as XHR;
       }
       fail(cb: Options["error"]) {
-        return (this as unknown as XHR).catch((error) => {
+        return (this as unknown as XHR).catch(([error]) => {
           //likeXHR, statusText, error
           return (
             cb.call(
