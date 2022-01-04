@@ -14,6 +14,8 @@ import getJSON from "./static/getJSON";
 import getScript from "./static/getScript";
 import installer from "./static/installer";
 import lastModified from "./static/lastModified";
+import get from "./static/get";
+import post from "./static/post";
 
 export default installer;
 export {
@@ -28,5 +30,7 @@ export {
   getJSON,
   getScript,
   evalUrl,
+  get,
+  post,
 };
 export type { Options };
