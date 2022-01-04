@@ -236,6 +236,13 @@ function ajax<Context = XHR>(
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     likeXHR = new (class extends Promise implements XHR {
+      static get [Symbol.species]() {
+        return Promise;
+      }
+      get [Symbol.toStringTag]() {
+        return "XHR";
+      }
+      
       readonly readyState = 0;
 
       constructor() {
