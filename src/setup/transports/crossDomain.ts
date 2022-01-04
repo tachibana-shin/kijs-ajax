@@ -1,23 +1,22 @@
+import { support } from "kijs";
+
+import ajaxSettings from "../../static/ajaxSettings";
+import ajaxTransport from "../../static/ajaxTransport";
+
 const xhrSuccessStatus = {
   0: 200,
   1223: 204,
 };
-const xhrSupported = !!ajaxSettings.xhr();
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const xhrSupported = !!ajaxSettings.xhr!();
 
 ajaxTransport((options) => {
-  // eslint-disable-next-line functional/no-let
-  let callback: {
-      (arg0: string | undefined): void;
-      (type: any): () => void;
-      (): void;
-    } | null,
-    errorCallback: { (): void; (): void } | null;
-
-  if (support.cors || (xhrSupported && !options.crossDomain)) {
+  // eslint-disable-next-line functional/no-let, @typescript-eslint/ban-types
+  let callback: Function | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((support as any).cors || (xhrSupported && !options.crossDomain)) {
     return {
-      send(headers: any, complete: any) {
-        // eslint-disable-next-line functional/no-let
-        let i;
+      send(headers, complete) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const xhr = options.xhr!();
 
@@ -30,7 +29,9 @@ ajaxTransport((options) => {
         );
 
         if (options.xhrFields) {
-          for (i in options.xhrFields) {
+          // eslint-disable-next-line functional/no-loop-statement
+          for (const i in options.xhrFields) {
+            // eslint-disable-next-line functional/immutable-data
             xhr[i] = options.xhrFields[i];
           }
         }
@@ -40,22 +41,29 @@ ajaxTransport((options) => {
         }
 
         if (!options.crossDomain && !headers["X-Requested-With"]) {
+          // eslint-disable-next-line functional/immutable-data
           headers["X-Requested-With"] = "XMLHttpRequest";
         }
 
-        for (i in headers) {
+        // eslint-disable-next-line functional/no-loop-statement
+        for (const i in headers) {
           xhr.setRequestHeader(i, headers[i]);
         }
 
-        callback = function (type) {
+        callback = function (type: string) {
           return function () {
             if (callback) {
               callback =
                 errorCallback =
+                // eslint-disable-next-line functional/immutable-data
                 xhr.onload =
+                // eslint-disable-next-line functional/immutable-data
                 xhr.onerror =
+                // eslint-disable-next-line functional/immutable-data
                 xhr.onabort =
+                // eslint-disable-next-line functional/immutable-data
                 xhr.ontimeout =
+                // eslint-disable-next-line functional/immutable-data
                 xhr.onreadystatechange =
                   null;
 
@@ -69,7 +77,9 @@ ajaxTransport((options) => {
                 }
               } else {
                 complete(
-                  xhrSuccessStatus[xhr.status] || xhr.status,
+                  xhrSuccessStatus[
+                    xhr.status as keyof typeof xhrSuccessStatus
+                  ] || xhr.status,
                   xhr.statusText,
 
                   (xhr.responseType || "text") !== "text" ||
@@ -83,17 +93,27 @@ ajaxTransport((options) => {
           };
         };
 
+        // eslint-disable-next-line functional/immutable-data
         xhr.onload = callback();
-        errorCallback = xhr.onerror = xhr.ontimeout = callback("error");
+        // eslint-disable-next-line  functional/no-let, @typescript-eslint/ban-types
+        let errorCallback: Function | null =
+          // eslint-disable-next-line functional/immutable-data
+          (xhr.onerror =
+          // eslint-disable-next-line functional/immutable-data
+          xhr.ontimeout =
+            callback("error"));
 
         if (xhr.onabort !== undefined) {
+          // eslint-disable-next-line functional/immutable-data
           xhr.onabort = errorCallback;
         } else {
+          // eslint-disable-next-line functional/immutable-data
           xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
               window.setTimeout(function () {
                 if (callback) {
-                  errorCallback();
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  errorCallback!();
                 }
               });
             }
@@ -106,6 +126,7 @@ ajaxTransport((options) => {
           xhr.send((options.hasContent && options.data) || null);
         } catch (e) {
           if (callback) {
+            // eslint-disable-next-line functional/no-throw-statement
             throw e;
           }
         }

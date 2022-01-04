@@ -1,38 +1,18 @@
-# fCanvas
-Library for canvas 2 HTML 5
-[View docs](https://tachibana-shin.github.io/fcanvas)
+# kijs-ajax
+Plugin add support ajax for kijs
+[View docs](https://tachibana-shin.github.io/kijs-ajax)
 
-[![Build](https://github.com/tachibana-shin/fcanvas/actions/workflows/docs.yml/badge.svg)](https://github.com/tachibana-shin/fcanvas/actions/workflows/docs.yml)
-[![NPM](https://badge.fury.io/js/fcanvas.svg)](http://badge.fury.io/js/fcanvas)
+[![Build](https://github.com/tachibana-shin/kijs-ajax/actions/workflows/docs.yml/badge.svg)](https://github.com/tachibana-shin/kijs-ajax/actions/workflows/docs.yml)
+[![NPM](https://badge.fury.io/js/kijs-ajax.svg)](http://badge.fury.io/js/kijs-ajax)
 
 Example:
 ``` ts
-import { createCanvas, Block } from "fcanvas"
+import { Kijs }, kijs from "kijs"
+import Ajax, { ajax } from "kijs-ajax"
 
-const canvas = createCanvas()
+Kijs.use(Ajax);
 
-canvas.setup(() => {
-  canvas.append()
-})
+console.log(await ajax("./test.json"))
 
-class App extends Block {
-  draw() {
-    this.circle(
-      this.instance.mouseX ?? 0,
-      this.instance.mouseY ?? 0,
-      50
-    )
-    if (this.instance.mouseIsPressed) {
-      this.fill("red")
-    } else {
-      this.stroke("green")
-    }
-  }
-}
-
-const app = new App()
-
-canvas.draw(() => {
-  app.render()
-})
+kijs("body").load("index.html")
 ```

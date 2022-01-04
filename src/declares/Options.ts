@@ -4,6 +4,7 @@
 import XHR from "./XHR";
 
 type Options<
+  Context = any,
   Data = string | Record<any, any> | Array<any> | FormData,
   DataType =
     | "xml"
@@ -23,7 +24,7 @@ type Options<
     | "timeout"
     | "abort"
     | "parsererror",
-  Context = XHR
+  Type = "GET" | "POST" | "PUT" | "DELETE" | "HEAD" | "OPTIONS"
 > = {
   accepts: {
     [key: string]: string;
@@ -35,11 +36,10 @@ type Options<
     options: Partial<Options>
   ) => void | false;
   cache: boolean;
-  complete: (this: Context, xhr: XHR, textStatus: TextStatus) => void;
   contents: {
     [key: string]: RegExp | boolean;
   };
-  contentType: boolean | string;
+  contentType: false | string;
   context: Context;
   converters: {
     [key: string]: ((text: string) => any) | boolean;
@@ -47,12 +47,14 @@ type Options<
   crossDomain: boolean;
   data: Data;
   dataFilter: (data: Data, type: DataType) => any;
+  success: (this: Context, data: any, textStatus: TextStatus, xhr: XHR) => any;
   error: (
     this: Context,
     xhr: XHR,
     textStatus: TextStatus,
     errorText: string
-  ) => void;
+  ) => any;
+  complete: (this: Context, xhr: XHR, textStatus: TextStatus) => any;
   global: boolean;
   headers: {
     [key: string]: string;
@@ -62,7 +64,7 @@ type Options<
   jsonp: string | boolean;
   // eslint-disable-next-line @typescript-eslint/ban-types
   jsonpCallback: string | Function;
-  method: "GET" | "POST" | "PUT" | "DELETE";
+  method: Type;
   mimeType: string;
   password: string;
   processData: boolean;
@@ -71,11 +73,10 @@ type Options<
   };
   scriptCharset: string;
   statusCode: {
-    [status: string | number]: (this: XHR) => void;
+    [status: string | number]: number | [number, number];
   };
-  success: (this: Context, data: any, textStatus: TextStatus, xhr: XHR) => void;
   traditional: boolean;
-  type: "GET" | "POST" | "PUT" | "DELETE";
+  type: Type;
   url: string;
   xhr: () => any;
   xhrFields: {
@@ -86,6 +87,11 @@ type Options<
   username: string;
   responseFields: Record<string, any>;
   throws: any;
+  hasContent: boolean;
+  timeout: number;
+  flatOptions: {
+    [key in keyof Options]?: boolean;
+  };
 };
 
 export default Options;

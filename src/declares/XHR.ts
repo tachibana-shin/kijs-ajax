@@ -2,11 +2,12 @@
 import Options from "./Options";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type XHR = Promise<any> & {
-  readyState: string;
+type XHR<Context = any> = Promise<any> & {
+  readyState: number;
+  status: number;
   getResponseHeader: (key: string) => null | string;
 
-  getAllResponseHeaders: () => XHR | null;
+  getAllResponseHeaders: () => string | null;
 
   setRequestHeader: (name: string, value: string) => XHR;
 
@@ -14,10 +15,11 @@ type XHR = Promise<any> & {
 
   statusCode: (map: Options["statusCode"]) => XHR;
 
-  abort: (statusText: string) => XHR;
+  abort: (statusText?: string) => XHR;
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  always: (cb: Function) => XHR;
+  done: (cb: Options<Context>["success"]) => XHR;
+  fail: (cb: Options<Context>["error"]) => XHR;
+  always: (cb: Options["success"] | Options["error"]) => XHR;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 };

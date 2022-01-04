@@ -8,8 +8,30 @@ const transports: Record<
     settings: Partial<Options>,
     options: Partial<Options>,
     likeXhr: XHR
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ) => string | void | any)[]
+  ) =>
+    | string
+    | void
+    | {
+        readonly send: (
+          headers: Record<string, string>,
+          complete: (
+            code: number,
+            statusText: XMLHttpRequest["statusText"],
+            response?:
+              | string
+              | {
+                  readonly binary: XMLHttpRequest["response"];
+                }
+              | {
+                  readonly text: string;
+                },
+            responseHeaders?: ReturnType<
+              XMLHttpRequest["getAllResponseHeaders"]
+            >
+          ) => void
+        ) => void;
+        readonly abort: () => void;
+      })[]
 > = {};
 
 export default transports;

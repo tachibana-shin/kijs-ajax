@@ -1,17 +1,30 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import kijs, { Kijs, toParam } from "kijs";
+
+import allTypes from "../constants/allTypes";
+import prefilters from "../constants/prefilters";
+import transports from "../constants/transports";
 import Options from "../declares/Options";
 import XHR from "../declares/XHR";
+import inspectPrefiltersOrTransports from "../helpers/inspectPrefiltersOrTransports";
+
+import ajaxSetup from "./ajaxSetup";
+import etag from "./etag";
+import lastModified from "./lastModified";
 
 const r20 = /%20/g,
   rhash = /#.*$/,
   rantiCache = /([?&])_=[^&]*/,
   reader = /^(.*?):[ \t]*([^\r\n]*)$/gm,
-  rlocalProtocol = /^(?:about|app|app-storage|.+-extension|file|res|widget):$/,
   rnoContent = /^(?:GET|HEAD)$/,
   rprotocol = /^\/\//,
-  originAnchor = new URL("./", location.href);
+  originAnchor = new URL("./", location.href),
+  rnothtmlwhite = /[^\x20\t\r\n\f]+/g,
+  rquery = /\?/;
 
 // eslint-disable-next-line functional/no-let
-let active = 0;
+let active = 0,
+  guid = 0;
 
 function ajaxHandleResponses(
   s: Partial<Options>,
@@ -19,11 +32,10 @@ function ajaxHandleResponses(
   responses: Record<string, any>
 ): any {
   // eslint-disable-next-line functional/no-let
-  let ct,
-    finalDataType,
-    firstDataType
-    const
-    contents = s.contents!,
+  let ct, finalDataType, firstDataType;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const contents = s.contents!,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     dataTypes = s.dataTypes!;
 
   // eslint-disable-next-line functional/no-loop-statement
@@ -38,7 +50,11 @@ function ajaxHandleResponses(
   if (ct) {
     // eslint-disable-next-line functional/no-loop-statement
     for (const type in contents) {
-      if (contents[type] && typeof contents[type] !== "boolean" && (contents[type] as RegExp).test(ct)) {
+      if (
+        contents[type] &&
+        typeof contents[type] !== "boolean" &&
+        (contents[type] as RegExp).test(ct)
+      ) {
         // eslint-disable-next-line functional/immutable-data
         dataTypes.unshift(type);
         break;
@@ -77,21 +93,18 @@ function ajaxConvert(
   response: string,
   likeXHR: XHR,
   isSuccess: boolean
-): {
-  readonly state: string;
-  readonly data: any;
-} | {
-  readonly state: string;
-  readonly error: any;
-}{
+):
+  | {
+      readonly state: string;
+      readonly data: any;
+    }
+  | {
+      readonly state: string;
+      readonly error: any;
+    } {
   // eslint-disable-next-line functional/no-let
-  let conn2,
-    current,
-    conc,
-    tmp,
-    prev
-    const
-    converters:  Required<typeof s>["converters"] = {},
+  let conn2, current, conc, tmp, prev;
+  const converters: Required<typeof s>["converters"] = {},
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     dataTypes = s.dataTypes!.slice();
 
@@ -156,7 +169,7 @@ function ajaxConvert(
             try {
               if (!conc) {
                 // eslint-disable-next-line functional/no-throw-statement
-                throw new Error("")
+                throw new Error("");
               }
               response = conc(response);
             } catch (e) {
@@ -176,10 +189,16 @@ function ajaxConvert(
   return { state: "success", data: response };
 }
 
-function ajax(url: string, options: Exclude<Partial<Options>, "url">): XHR;
-function ajax(options: Partial<Options>): XHR;
+function ajax<Context = XHR>(
+  url: string,
+  options: Exclude<Partial<Options<Context>>, "url">
+): XHR;
+function ajax<Context = XHR>(options: Partial<Options<Context>>): XHR;
 
-function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
+function ajax<Context = XHR>(
+  url: any,
+  options?: Partial<Options<Context>>
+): XHR {
   if (typeof url === "object") {
     options = url;
     url = undefined;
@@ -188,33 +207,37 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
   options = options || {};
 
   // eslint-disable-next-line functional/no-let
-  let transport:any,
+  let transport: any,
     cacheURL: string,
     responseHeadersString: string,
-    responseHeaders: { readonly [x: string]: any; },
+    // eslint-disable-next-line functional/prefer-readonly-type
+    responseHeaders: { [x: string]: any },
     timeoutTimer: number | undefined,
     urlAnchor,
-    completed: boolean | null,
-    fireGlobals: any,
-    i,
-    uncached,
-    s = ajaxSetup({}, options),
+    completed = false,
+    uncached;
+  const s = ajaxSetup({}, options),
     callbackContext = s.context || s,
     globalEventContext =
-      s.context && (callbackContext.nodeType || callbackContext.kijs)
+      s.context &&
+      ((callbackContext as Element).nodeType ||
+        (callbackContext as unknown as Kijs).kijs)
         ? kijs(callbackContext)
-        : event,
+        : kijs(window),
     statusCode = s.statusCode || {},
-    requestHeaders = {},
-    requestHeadersNames = {},
-    resolveWith: (arg0: any, arg1: readonly any[]) => void,
-    rejectWith: (arg0: any, arg1: readonly any[]) => void,
-    strAbort = "canceled",
-    completeDeferred = new Set(),
+    // eslint-disable-next-line functional/prefer-readonly-type
+    requestHeaders: { [x: string]: string } = {},
+    // eslint-disable-next-line functional/prefer-readonly-type
+    requestHeadersNames: { [x: string]: string } = {};
+  // eslint-disable-next-line functional/no-let
+  let resolveWith: (arg0: any) => void,
+    rejectWith: (arg0: any) => void,
+    strAbort = "canceled";
+  const completeDeferred = new Set<Options["complete"]>(),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     likeXHR = new (class extends Promise implements XHR {
       readonly readyState = 0;
-      readonly done = this.then;
-      readonly failure = this.catch;
 
       constructor() {
         super((resolve: any, reject: any) => {
@@ -231,6 +254,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
             responseHeaders = {};
             // eslint-disable-next-line functional/no-loop-statement
             while ((match = reader.exec(responseHeadersString))) {
+              // eslint-disable-next-line functional/immutable-data
               responseHeaders[match[1].toLowerCase() + " "] = (
                 responseHeaders[match[1].toLowerCase() + " "] || []
               ).concat(match[2]);
@@ -245,33 +269,41 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
         return completed ? responseHeadersString : null;
       }
 
-      setRequestHeader(name: string, value: any) {
+      setRequestHeader(name: string, value: string) {
         if (completed == null) {
+          // eslint-disable-next-line functional/immutable-data
           name = requestHeadersNames[name.toLowerCase()] =
             requestHeadersNames[name.toLowerCase()] || name;
+          // eslint-disable-next-line functional/immutable-data
           requestHeaders[name] = value;
         }
-        return this;
+        return this as unknown as XHR;
       }
 
-      overrideMimeType(type: any) {
+      overrideMimeType(type: string) {
         if (completed == null) {
+          // eslint-disable-next-line functional/immutable-data
           s.mimeType = type;
         }
-        return this;
+        return this as unknown as XHR;
       }
 
-      statusCode(map: { readonly [x: string]: any; }) {
+      statusCode(map: Options["statusCode"]) {
         if (map) {
           if (completed) {
-            promise.always(map[likeXHR.status]);
+            resolveWith(map[likeXHR.status]);
           } else {
+            // eslint-disable-next-line functional/no-loop-statement
             for (const code in map) {
-              statusCode[code] = [statusCode[code], map[code]];
+              // eslint-disable-next-line functional/immutable-data
+              statusCode[code] = [
+                statusCode[code] as number,
+                map[code] as number,
+              ];
             }
           }
         }
-        return this;
+        return this as unknown as XHR;
       }
 
       abort(statusText: string | undefined) {
@@ -280,52 +312,99 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
           transport.abort(finalText);
         }
         done(0, finalText);
-        return this;
+        return this as unknown as XHR;
       }
 
-      always(cb: (arg0: any) => void) {
+      done(cb: Options["success"]) {
+        return (this as unknown as XHR).then((data) => {
+          //success, statusText, likeXHR
+          return (
+            cb.call(
+              callbackContext as any,
+              data,
+              (this as unknown as XHR).statusText,
+              this as unknown as XHR
+            ) || data
+          );
+        }) as unknown as XHR;
+      }
+      fail(cb: Options["error"]) {
+        return (this as unknown as XHR).catch((error) => {
+          //likeXHR, statusText, error
+          return (
+            cb.call(
+              callbackContext as any,
+              this as unknown as XHR,
+              (this as unknown as XHR).statusText,
+              error
+            ) || error
+          );
+        }) as unknown as XHR;
+      }
+      always(cb: Options["success"] | Options["error"]) {
         // eslint-disable-next-line functional/no-let
-        let isError = false;
+        let completed = false;
 
-        this.catch((err: any) => {
-          isError = true;
-          return err;
-        }).then((e: any) => {
-          cb(e);
+        return (
+          (this as unknown as XHR)
+            // eslint-disable-next-line functional/functional-parameters
+            .fail(function (...args) {
+              completed = true;
+              return (cb as Options["error"]).call(this, ...args) || args[0];
+            })
+            // eslint-disable-next-line functional/functional-parameters
+            .done(function (...args) {
+              if (completed === false) {
+                return (
+                  (cb as Options["success"]).call(this, ...args) || args[0]
+                );
+              }
 
-          if (isError) {
-            throw e;
-          }
-        });
+              return args[0];
+            }) as unknown as XHR
+        );
       }
-    })();
+    })() as unknown as XHR<Context>;
 
+  // eslint-disable-next-line functional/immutable-data
   s.url = ((url || s.url || location.href) + "").replace(
     rprotocol,
     location.protocol + "//"
   );
 
+  // eslint-disable-next-line functional/immutable-data
   s.type = options.method || options.type || s.method || s.type;
 
+  // eslint-disable-next-line functional/immutable-data
   s.dataTypes = (s.dataType || "*").toLowerCase().match(rnothtmlwhite) || [""];
 
   if (s.crossDomain == null) {
     urlAnchor = document.createElement("a");
 
     try {
+      // eslint-disable-next-line functional/immutable-data
       urlAnchor.href = s.url;
 
+      // eslint-disable-next-line functional/immutable-data, no-self-assign
       urlAnchor.href = urlAnchor.href;
+      // eslint-disable-next-line functional/immutable-data
       s.crossDomain =
         originAnchor.protocol + "//" + originAnchor.host !==
         urlAnchor.protocol + "//" + urlAnchor.host;
     } catch (e) {
+      // eslint-disable-next-line functional/immutable-data
       s.crossDomain = true;
     }
   }
 
-  if (s.data && s.processData && typeof s.data !== "string") {
-    s.data = toParam(s.data, s.traditional);
+  if (
+    s.data &&
+    s.processData &&
+    typeof s.data !== "string" &&
+    s.data instanceof FormData === false
+  ) {
+    // eslint-disable-next-line functional/immutable-data
+    s.data = toParam(s.data as Record<any, any>);
   }
 
   inspectPrefiltersOrTransports(prefilters, s, options, likeXHR);
@@ -334,14 +413,16 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     return likeXHR;
   }
 
-  fireGlobals = event && s.global;
+  const fireGlobals = event && s.global;
 
   if (fireGlobals && active++ === 0) {
-    event.trigger("ajaxStart");
+    globalEventContext.trigger("ajaxStart");
   }
 
-  s.type = s.type.toUpperCase();
+  // eslint-disable-next-line functional/immutable-data
+  s.type = (s.type?.toUpperCase() as Options["type"]) ?? "GET";
 
+  // eslint-disable-next-line functional/immutable-data
   s.hasContent = !rnoContent.test(s.type);
 
   cacheURL = s.url.replace(rhash, "");
@@ -352,21 +433,26 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     if (s.data && (s.processData || typeof s.data === "string")) {
       cacheURL += (rquery.test(cacheURL) ? "&" : "?") + s.data;
 
+      // eslint-disable-next-line functional/immutable-data
       delete s.data;
     }
 
     if (s.cache === false) {
       cacheURL = cacheURL.replace(rantiCache, "$1");
-      uncached =
-        (rquery.test(cacheURL) ? "&" : "?") + "_=" + nonce.guid++ + uncached;
+      uncached = (rquery.test(cacheURL) ? "&" : "?") + "_=" + guid++ + uncached;
     }
 
+    // eslint-disable-next-line functional/immutable-data
     s.url = cacheURL + uncached;
   } else if (
     s.data &&
     s.processData &&
-    (s.contentType || "").indexOf("application/x-www-form-urlencoded") === 0
+    (s.contentType?.toString() || "").indexOf(
+      "application/x-www-form-urlencoded"
+    ) === 0 &&
+    typeof s.data === "string"
   ) {
+    // eslint-disable-next-line functional/immutable-data
     s.data = s.data.replace(r20, "+");
   }
 
@@ -374,11 +460,13 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     if (lastModified.has(cacheURL)) {
       likeXHR.setRequestHeader(
         "If-Modified-Since",
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         lastModified.get(cacheURL)!
       );
     }
     if (etag.has(cacheURL)) {
-      likeXHR.setRequestHeader("If-None-Match", etag.get(cacheURL));
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      likeXHR.setRequestHeader("If-None-Match", etag.get(cacheURL)!);
     }
   }
 
@@ -386,39 +474,50 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     (s.data && s.hasContent && s.contentType !== false) ||
     options.contentType
   ) {
-    likeXHR.setRequestHeader("Content-Type", s.contentType);
+    likeXHR.setRequestHeader("Content-Type", s.contentType as string);
   }
 
   likeXHR.setRequestHeader(
     "Accept",
-    s.dataTypes[0] && s.accepts[s.dataTypes[0]]
+    s.dataTypes[0] && s.accepts?.[s.dataTypes[0]]
       ? s.accepts[s.dataTypes[0]] +
           (s.dataTypes[0] !== "*" ? ", " + allTypes + "; q=0.01" : "")
-      : s.accepts["*"]
+      : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        s.accepts!["*"]
   );
 
-  for (i in s.headers) {
+  // eslint-disable-next-line functional/no-loop-statement
+  for (const i in s.headers) {
     likeXHR.setRequestHeader(i, s.headers[i]);
   }
 
   if (
     s.beforeSend &&
-    (s.beforeSend.call(callbackContext, likeXHR, s) === false || completed)
+    (s.beforeSend.call(callbackContext as any, likeXHR, s) === false ||
+      completed)
   ) {
     return likeXHR.abort();
   }
 
   strAbort = "abort";
 
-  completeDeferred.add(s.complete);
-  likeXHR.done(s.success);
-  likeXHR.fail(s.error);
+  if (s.complete) {
+    completeDeferred.add(s.complete);
+  }
+
+  if (s.success) {
+    likeXHR.done(s.success);
+  }
+  if (s.error) {
+    likeXHR.fail(s.error);
+  }
 
   transport = inspectPrefiltersOrTransports(transports, s, options, likeXHR);
 
   if (!transport) {
     done(-1, "No Transport");
   } else {
+    // eslint-disable-next-line functional/immutable-data
     likeXHR.readyState = 1;
 
     if (fireGlobals) {
@@ -429,8 +528,8 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
       return likeXHR;
     }
 
-    if (s.async && s.timeout > 0) {
-      timeoutTimer = window.setTimeout(function () {
+    if (s.async && s.timeout && s.timeout > 0) {
+      timeoutTimer = window.setTimeout(() => {
         likeXHR.abort("timeout");
       }, s.timeout);
     }
@@ -440,6 +539,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
       transport.send(requestHeaders, done);
     } catch (e) {
       if (completed) {
+        // eslint-disable-next-line functional/no-throw-statement
         throw e;
       }
 
@@ -447,7 +547,13 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     }
   }
 
-  function done(status: number, nativeStatusText: unknown, responses: Record<string, any> | undefined, headers: string | undefined) {
+  function done(
+    status: number,
+    nativeStatusText: unknown,
+    responses?: Record<string, any>,
+    headers?: string
+  ) {
+    // eslint-disable-next-line functional/no-let
     let isSuccess,
       success,
       error,
@@ -469,6 +575,7 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
 
     responseHeadersString = headers || "";
 
+    // eslint-disable-next-line functional/immutable-data
     likeXHR.readyState = status > 0 ? 4 : 0;
 
     isSuccess = (status >= 200 && status < 300) || status === 304;
@@ -479,10 +586,12 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
 
     if (
       !isSuccess &&
-      s.dataTypes.includes("script") &&
-      !s.dataTypes.includes("json")
+      s.dataTypes?.includes("script") &&
+      !s.dataTypes.includes("json") &&
+      s.converters
     ) {
-      s.converters["text script"] = function () {};
+      // eslint-disable-next-line functional/immutable-data, @typescript-eslint/no-empty-function
+      s.converters["text script"] = () => {};
     }
 
     response = ajaxConvert(s, response, likeXHR, isSuccess);
@@ -505,8 +614,8 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
         statusText = "notmodified";
       } else {
         statusText = response.state;
-        success = response.data;
-        error = response.error;
+        success = (response as any).data;
+        error = (response as any).error;
         isSuccess = !error;
       }
     } else {
@@ -519,17 +628,20 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
       }
     }
 
+    // eslint-disable-next-line functional/immutable-data
     likeXHR.status = status;
+    // eslint-disable-next-line functional/immutable-data
     likeXHR.statusText = (nativeStatusText || statusText) + "";
 
     if (isSuccess) {
-      resolveWith(callbackContext, [success, statusText, likeXHR]);
+      // resolveWith(callbackContext, [success, statusText, likeXHR]);
+      resolveWith([success, statusText, likeXHR, callbackContext]);
     } else {
-      rejectWith(callbackContext, [likeXHR, statusText, error]);
+      // rejectWith(callbackContext, [likeXHR, statusText, error]);
+      rejectWith([error, statusText, likeXHR, callbackContext]);
     }
 
     likeXHR.statusCode(statusCode);
-    statusCode = undefined;
 
     if (fireGlobals) {
       globalEventContext.trigger(isSuccess ? "ajaxSuccess" : "ajaxError", [
@@ -540,14 +652,14 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
     }
 
     completeDeferred.forEach((cb) =>
-      cb(callbackContext, [likeXHR, statusText])
+      cb.call(callbackContext as any, likeXHR, statusText as any)
     );
 
     if (fireGlobals) {
       globalEventContext.trigger("ajaxComplete", [likeXHR, s]);
 
       if (!--active) {
-        event.trigger("ajaxStop");
+        globalEventContext.trigger("ajaxStop");
       }
     }
   }
@@ -556,3 +668,6 @@ function ajax(url: string | Partial<Options>, options?: Partial<Options>): XHR {
 }
 
 export default ajax;
+export function getActive(): number {
+  return active;
+}

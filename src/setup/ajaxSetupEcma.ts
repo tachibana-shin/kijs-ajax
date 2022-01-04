@@ -1,6 +1,6 @@
 import { globalEval } from "kijs";
 
-import ajaxSetup from "../static/ajaxExtend";
+import ajaxSetup from "../static/ajaxSetup";
 
 ajaxSetup({
   accepts: {

@@ -1,9 +1,10 @@
-import Options from "../declares/Options";
+import { globalEval } from "kijs";
+
 import ajax from "./ajax";
 
 export default function evalUrl(
   url: string,
-  options?: Partial<Options>,
+  options?: HTMLScriptElement,
   doc: Document = document
 ) {
   return ajax({
@@ -16,10 +17,11 @@ export default function evalUrl(
     global: false,
 
     converters: {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       "text script"() {},
     },
     dataFilter(response) {
-      globalEval(response, options, doc);
+      globalEval(response as string, options, doc);
     },
   });
 }

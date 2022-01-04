@@ -1,4 +1,4 @@
-import ajaxSetup from "../static/ajaxExtend";
+import ajaxSetup from "../static/ajaxSetup";
 
 import oldCallbacks from "./constants/oldCallbacks";
 
@@ -9,9 +9,10 @@ let guid = 0;
 ajaxSetup({
   jsonp: "callback",
   jsonpCallback() {
-    const callback = oldCallbacks.pop() || expando + "_" + guid++;
     // eslint-disable-next-line functional/immutable-data
-    this[callback] = true;
+    const callback = oldCallbacks.pop() || expando + "_" + guid++;
+    // eslint-disable-next-line functional/immutable-data, @typescript-eslint/no-explicit-any
+    (this as any)[callback] = true;
     return callback;
   },
 });

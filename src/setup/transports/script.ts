@@ -1,14 +1,19 @@
+import kijs from "kijs";
+
+import ajaxTransport from "../../static/ajaxTransport";
+
 ajaxTransport("script", (s) => {
   if (s.crossDomain || s.scriptAttrs) {
-    let script, callback;
+    // eslint-disable-next-line functional/no-let, @typescript-eslint/ban-types
+    let callback: Function | null;
     return {
       send(_, complete) {
-        script = kijs("<script>")
+        const script = kijs("<script>")
           .attr(s.scriptAttrs || {})
           .prop({ charset: s.scriptCharset, src: s.url })
           .on(
             "load error",
-            (callback = function (evt) {
+            (callback = (evt: Event) => {
               script.remove();
               callback = null;
               if (evt) {

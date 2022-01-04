@@ -1,4 +1,11 @@
-const ajaxSettings: Options = {
+import allTypes from "../constants/allTypes";
+import Options from "../declares/Options";
+import parseXML from "../helpers/parseXML";
+
+const rlocalProtocol =
+  /^(?:about|app|app-storage|.+-extension|file|res|widget):$/;
+
+const ajaxSettings: Partial<Options> = {
   url: location.href,
   type: "GET",
   isLocal: rlocalProtocol.test(location.protocol),
@@ -45,6 +52,7 @@ const ajaxSettings: Options = {
   xhr() {
     try {
       return new XMLHttpRequest();
+      // eslint-disable-next-line no-empty
     } catch {}
   },
 };
