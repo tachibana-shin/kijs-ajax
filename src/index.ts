@@ -10,11 +10,11 @@ import ajaxSetup from "./static/ajaxSetup";
 import ajaxTransport from "./static/ajaxTransport";
 import etag from "./static/etag";
 import evalUrl from "./static/evalUrl";
+import get from "./static/get";
 import getJSON from "./static/getJSON";
 import getScript from "./static/getScript";
 import installer from "./static/installer";
 import lastModified from "./static/lastModified";
-import get from "./static/get";
 import post from "./static/post";
 
 export default installer;
