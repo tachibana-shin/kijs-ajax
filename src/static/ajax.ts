@@ -233,23 +233,28 @@ function ajax<Context = XHR>(
     rejectWith: (arg0: any) => void,
     strAbort = "canceled";
   const completeDeferred = new Set<Options["complete"]>(),
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    likeXHR = new (class extends Promise implements XHR {
-      static get [Symbol.species]() {
-        return Promise;
-      }
+    likeXHR = new (class extends Promise<any> implements XHR {
+      // static get [Symbol.species]() {
+      //   return Promise;
+      // }
       get [Symbol.toStringTag]() {
         return "XHR";
       }
-      
-      readonly readyState = 0;
 
-      constructor() {
-        super((resolve: any, reject: any) => {
+      // eslint-disable-next-line functional/prefer-readonly-type
+      readyState = 0;
+      // eslint-disable-next-line functional/prefer-readonly-type
+      [key: string]: any;
+      // eslint-disable-next-line functional/prefer-readonly-type
+      status = 0;
+
+      constructor(
+        cb = (resolve: any, reject: any) => {
           resolveWith = resolve;
           rejectWith = reject;
-        });
+        }
+      ) {
+        super(cb);
       }
 
       getResponseHeader(key: string) {
